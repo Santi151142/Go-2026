@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GO Express — Partida rápida</title>
+<style>
+:root{--red:#7b1010;--dark:#250605;--gold:#e8bd61;--paper:#f3dfb4;--wood:#d6a15b}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at top,#6b1713,#260706 65%);color:#fff0cf;font-family:Georgia,serif}
+header{text-align:center;padding:18px 10px;background:linear-gradient(120deg,#510807,#a71919,#510807);border-bottom:4px solid var(--gold)}
+h1{margin:0;color:#ffe5a0;letter-spacing:5px;font-size:clamp(30px,5vw,46px)}
+header p{margin:6px 0 0}
+main{width:min(850px,95%);margin:18px auto 30px}
+.top{display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.panel{background:linear-gradient(145deg,#671010,#360707);border:2px solid #d5a23e;border-radius:8px;padding:14px;box-shadow:0 5px 15px #0005}
+#status{font-size:19px;font-weight:bold;color:#ffe5a0}
+#message{font-size:14px;min-height:20px;color:#f5d68c;margin:8px 0 0}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:14px;margin-top:14px;align-items:start}
+.board-frame{background:linear-gradient(145deg,#8d4c20,#3d1709);border:5px solid #d5a23e;padding:12px;border-radius:7px;box-shadow:0 0 25px #e4ad3c30}
+.board{width:100%;aspect-ratio:1;display:grid;grid-template-columns:repeat(5,1fr);padding:8%;background:var(--wood);border:2px solid #70431e}
+.point{position:relative;display:grid;place-items:center;padding:0;border:0;border-radius:0;min-width:0;min-height:0;cursor:pointer;background:linear-gradient(#70431e,#70431e) center/1px 100% no-repeat,linear-gradient(#70431e,#70431e) center/100% 1px no-repeat}
+.point:hover{background-color:#fff3}
+.point:focus-visible{outline:2px solid #fff;outline-offset:-2px}
+.stone{width:79%;height:79%;border-radius:50%;position:absolute;z-index:2;pointer-events:none}
+.black{background:radial-gradient(circle at 30% 25%,#777,#111 65%);border:1px solid #080808;box-shadow:1px 2px 3px #0008}
+.white{background:radial-gradient(circle at 30% 25%,#fff,#ddd 75%);border:1px solid #888;box-shadow:1px 2px 3px #0006}
+.controls{display:grid;gap:9px;margin-top:12px}
+button.control{background:linear-gradient(#f4d27b,#c58a2d);color:#470707;border:2px solid #ffe6a0;padding:11px 12px;border-radius:5px;font:bold 14px Georgia,serif;cursor:pointer}
+button.control:hover{filter:brightness(1.08)}
+.stats{display:grid;gap:9px;margin-top:12px}
+.stat{border-top:1px solid #c18a3b77;padding-top:8px;font-size:14px}
+.stat strong{font-size:24px;color:#fff1c9;margin-left:8px}
+.rules{margin-top:16px;background:var(--paper);color:#48220f;border:4px double #a51b16;padding:18px;line-height:1.6}
+.rules h2{color:#a31616;margin:0 0 8px}
+.rules p{margin:6px 0}
+footer{text-align:center;padding:16px;background:#160403;color:#e9c36d;border-top:2px solid #c89a3c;font-size:13px}
+@media(max-width:620px){.layout{grid-template-columns:1fr}.side{order:2}.board-frame{order:1}.top{justify-content:center;text-align:center}.panel{padding:12px}}
+</style>
+</head>
+<body>
+<header><h1>GO EXPRESS 围棋</h1><p>Partidas rápidas · Estilo chino</p></header>
+<main>
+  <section class="panel top">
+    <div><div id="status">Turno: Negras ⚫</div><div id="message" role="status" aria-live="polite">¡Primero en llegar a 5 capturas gana!</div></div>
+    <div><strong>Meta: 5 capturas</strong><br><small>Tablero reducido de 5×5</small></div>
+  </section>
+  <div class="layout">
+    <div class="board-frame"><div id="board" class="board" aria-label="Tablero de Go de cinco por cinco"></div></div>
+    <aside class="panel side">
+      <h2 style="margin-top:0;color:#ffe5a0">Marcador</h2>
+      <div class="stats">
+        <div class="stat">⚫ Negras<strong id="blackScore">0</strong></div>
+        <div class="stat">⚪ Blancas<strong id="whiteScore">0</strong></div>
+      </div>
+      <div class="controls">
+        <button class="control" id="pass">↪ Pasar turno</button>
+        <button class="control" id="restart">⟳ Reiniciar partida</button>
+      </div>
+      <p style="font-size:13px;line-height:1.5;color:#e9cba0">Regla rápida: el primero que capture 5 piedras gana. Si ambos pasan seguidos, la partida termina.</p>
+    </aside>
+  </div>
+  <section class="rules">
+    <h2>¿Cómo se juega al GO?</h2>
+    <p><strong>1. Colocá piedras:</strong> negras empiezan y después juega blancas. Hacé clic en una intersección vacía.</p>
+    <p><strong>2. Capturá:</strong> una piedra o grupo conectado queda capturado cuando el rival ocupa todas sus libertades (intersecciones vacías vecinas).</p>
+    <p><strong>3. Ganá rápido:</strong> en esta versión exprés, el primer jugador que capture 5 piedras gana. También pueden pasar los dos turnos seguidos para finalizar.</p>
+    <p><em>Esta es una variante simplificada para partidas cortas, no el sistema oficial de puntuación del Go.</em></p>
+  </section>
+</main>
+<footer>GO EXPRESS · Estrategia rápida, paciencia y concentración</footer>
+<script>
+"use strict";
+const N=5, boardEl=document.getElementById("board"), statusEl=document.getElementById("status"), messageEl=document.getElementById("message");
+let board,player,captures,passes,finished;
+function neighbors(x,y){return [[x+1,y],[x-1,y],[x,y+1],[x,y-1]].filter(([a,b])=>a>=0&&a<N&&b>=0&&b<N)}
+function group(x,y){
+  const color=board[y][x],stack=[[x,y]],seen=new Set(),stones=[],liberties=new Set();
+  while(stack.length){const [a,b]=stack.pop(),k=a+","+b;if(seen.has(k))continue;seen.add(k);stones.push([a,b]);
+    for(const [nx,ny] of neighbors(a,b)){if(board[ny][nx]===0)liberties.add(nx+","+ny);else if(board[ny][nx]===color&&!seen.has(nx+","+ny))stack.push([nx,ny])}
+  }return {stones,liberties};
+}
+function draw(){
+  boardEl.innerHTML="";
+  for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+    const b=document.createElement("button");b.type="button";b.className="point";
+    b.setAttribute("aria-label",`Fila ${y+1}, columna ${x+1}`);
+    if(board[y][x]){const s=document.createElement("span");s.className="stone "+(board[y][x]===1?"black":"white");b.appendChild(s)}
+    b.addEventListener("click",()=>play(x,y));boardEl.appendChild(b);
+  }
+  document.getElementById("blackScore").textContent=captures[1];
+  document.getElementById("whiteScore").textContent=captures[2];
+  statusEl.textContent=finished?"Partida finalizada":`Turno: ${player===1?"Negras ⚫":"Blancas ⚪"}`;
+  document.getElementById("pass").disabled=finished;
+}
+function say(t){messageEl.textContent=t}
+function play(x,y){
+  if(finished)return;
+  if(board[y][x]!==0){say("Esa intersección ya está ocupada.");return}
+  const before=board.map(r=>r.slice()), rival=player===1?2:1;
+  board[y][x]=player;let took=0;
+  for(const [nx,ny] of neighbors(x,y)){
+    if(board[ny][nx]!==rival)continue;
+    const g=group(nx,ny);
+    if(g.liberties.size===0){for(const [gx,gy] of g.stones){board[gy][gx]=0;took++}}
+  }
+  if(group(x,y).liberties.size===0){board=before;draw();say("Movimiento ilegal: tu grupo quedaría sin libertades.");return}
+  captures[player]+=took;passes=0;
+  if(captures[player]>=5){finished=true;draw();say(`¡Ganan las ${player===1?"negras":"blancas"} al llegar a 5 capturas!`);return}
+  player=rival;draw();say(took?`¡Capturaste ${took} piedra(s)!`:"Movimiento realizado.");
+}
+function pass(){
+  if(finished)return;
+  passes++;
+  if(passes===2){finished=true;draw();say("Ambos jugadores pasaron. Partida finalizada.");return}
+  player=player===1?2:1;draw();say("Turno pasado. Ahora juega "+(player===1?"negras.":"blancas."));
+}
+function restart(){board=Array.from({length:N},()=>Array(N).fill(0));player=1;captures={1:0,2:0};passes=0;finished=false;draw();say("¡Primero en llegar a 5 capturas gana! Las negras empiezan.")}
+document.getElementById("pass").addEventListener("click",pass);
+document.getElementById("restart").addEventListener("click",restart);
+restart();
+</script>
+</body>
+</html>
